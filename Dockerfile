@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 # Instalar paquetes de r que sean necesarios
 RUN R -e "install.packages('shiny', repos='http://cran.rstudio.com/')"
 RUN R -e "install.packages('bigrquery', repos='http://cran.rstudio.com/')"
-
+RUN R -e "install.packages('googleCloudStorageR', repos='http://cran.rstudio.com/')"
 # Limpieza
 RUN rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
