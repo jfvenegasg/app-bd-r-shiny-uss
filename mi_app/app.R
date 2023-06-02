@@ -9,6 +9,7 @@
 
 library(shiny)
 library(bigrquery)
+#Aqui se carga el token para conectarse al servicio de Bigquery en nuestra cuenta GCP
 bigrquery::bq_auth(path ="shiny-apps-385622-08e5b9820326.json")
 
 # Define UI for application that draws a histogram
@@ -55,11 +56,16 @@ server <- function(input, output) {
              main = 'Histogram of waiting times')
     })
     
+    #Aqui se define el proyecto en el cual habilitamos el servicio Bigquery
     project_id <- "shiny-apps-385622"
+    
+    #Esta es la consulta SQL que realizamos al servicio BigQuery
     sql<-"SELECT * from `bigquery-public-data.austin_bikeshare.bikeshare_trips`"
     
+    #Aqui estamos generando un set de datos vacio
     respuesta <- reactiveValues(data=NULL)
     
+    #Aca estamos recibiendo el input del boton definido en la UI,para hacer luego la consulta SQL
     observeEvent(input$boton, {
       consulta <- bigrquery::bq_project_query(project_id, sql)
       respuesta$datos <-bigrquery::bq_table_download(consulta, n_max = 10)
