@@ -9,8 +9,12 @@
 
 library(shiny)
 library(bigrquery)
+library(googleCloudStorageR)
 #Aqui se carga el token para conectarse al servicio de Bigquery en nuestra cuenta GCP
 bigrquery::bq_auth(path ="shiny-apps-385622-08e5b9820326.json")
+googleCloudStorageR::gcs_auth(json_file = "shiny-apps-385622-0553170e693d.json")
+#googleCloudStorageR::gcs_list_buckets("shiny-apps-385622")
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -33,15 +37,16 @@ ui <- fluidPage(
            plotOutput("distPlot")
         )
     )),
-    fluidRow(actionButton(inputId = "boton",label =  "Descarga"),dataTableOutput("datos_bigquery"))
+    fluidRow(actionButton(inputId = "boton",label =  "Descarga")),
+    fluidRow(dataTableOutput("datos_bigquery"))
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     
     output$imagen <- renderImage({
-    
-    list(src = "uss.png")
+    googleCloudStorageR::gcs_get_object(object_name ="uss.png" ,bucket = "imagenes_app_uss",saveToDisk ="uss_GCS.png",overwrite = TRUE )
+    list(src = "uss_GCS.png")
     
     }, deleteFile = F)
     
@@ -60,7 +65,7 @@ server <- function(input, output) {
     project_id <- "shiny-apps-385622"
     
     #Esta es la consulta SQL que realizamos al servicio BigQuery
-    sql<-"SELECT * from `bigquery-public-data.austin_bikeshare.bikeshare_trips`"
+    sql<-"SELECT * from `bigquery-public-data.austin_bikeshare.bikeshare_trips` LIMIT 30"
     
     #Aqui estamos generando un set de datos vacio
     respuesta <- reactiveValues(data=NULL)
@@ -68,7 +73,7 @@ server <- function(input, output) {
     #Aca estamos recibiendo el input del boton definido en la UI,para hacer luego la consulta SQL
     observeEvent(input$boton, {
       consulta <- bigrquery::bq_project_query(project_id, sql)
-      respuesta$datos <-bigrquery::bq_table_download(consulta, n_max = 10)
+      respuesta$datos <-bigrquery::bq_table_download(consulta, n_max = 30)
     })
     
     output$datos_bigquery<-renderDataTable({respuesta$datos    }) 
